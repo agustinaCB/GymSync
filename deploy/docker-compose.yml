@@ -1,0 +1,47 @@
+version: '3.9'
+
+services:
+#Esto es la base de datos
+  mariadb:
+    #Esto es la imagen del servicio, es como un sistema operativo
+    image: mariadb:latest
+    #Nombre del contenedor, esto no se suele usar mucho
+    container_name: mariadb_gymsync
+    # Variables de entorno, IMPORTANTE, es para PRECONFIGURAR la imagen, definimos VALORES
+    environment:
+      # ROOT = DIOS, si quieres acceder a root pones en el name: root y la contraseña
+      MYSQL_ROOT_PASSWORD: rootpassword
+      #Nombre de la base de datos
+      MYSQL_DATABASE: gymsync
+      MYSQL_USER: gymsyncuser
+      MYSQL_PASSWORD: gymsyncpassword
+    ports:
+      - "3306:3306"
+    # Sirve para varias cosas aunque aquí definimos donde van a ir los datos
+    # En /var/lib/mysql están los datos de la base de datos
+    # Un volumen (como mariadb_data) es un lugar lógico donde se guardan los datos
+    # Un lugar que inicializa docker para destinarlos al almacenaje
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    # El servicio se va a reiniciar si se para
+    restart: unless-stopped
+
+#Esto es el visualizador en web de la base de datos
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin_gymsync
+    environment:
+      # PMA_HOST es el servicio al que se conecta, en este caso mariadb
+      PMA_HOST: mariadb
+      # Credenciales de acceso de la base de datos definidas antes
+      PMA_USER: gymsyncuser
+      PMA_PASSWORD: gymsyncpassword
+    ports:
+      - "8080:80"
+    # Dependencia, si uno no se enciende este tampoco
+    depends_on:
+      - mariadb
+    restart: unless-stopped
+
+volumes:
+  mariadb_data:
